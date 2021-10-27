@@ -29,6 +29,7 @@ const (
 var (
 	WorkspacePath string
 	RepoPath      string
+	FileExtension string
 )
 
 var (
@@ -101,8 +102,17 @@ func (cmd *configCommand) setFlags() []Flag {
 		DefaultValue: DefaultPath,
 		Description:  "Set custom location for workspace",
 	})
+
+	fileExtFlag := NewStringFlag(StringFlagConfig{
+		Name:         "file-ext",
+		RefVar:       &FileExtension,
+		DefaultValue: "reaktor",
+		Description:  "Set custom extension for your files",
+	})
+
 	return []Flag{
 		pathFlag,
+		fileExtFlag,
 	}
 }
 
@@ -125,6 +135,9 @@ func (cmd *configCommand) runWithError(c *cobra.Command, args []string) error {
 	}
 	workspaceDir.Close()
 
+	cfgFilePath := strings.Join([]string{workspacePath, "config.json"}, "/")
+	repoDirPath := strings.Join([]string{workspacePath, "repo"}, "/")
+
 	err = os.MkdirAll(workspacePath, os.ModePerm)
 	if err != nil {
 		pterm.Error.Printf("%s:[%s]\n", ErrConfigUnableToCreateWorkspace, workspacePath)
@@ -133,7 +146,7 @@ func (cmd *configCommand) runWithError(c *cobra.Command, args []string) error {
 		return errors.New("error")
 	}
 
-	f, err := os.Create(strings.Join([]string{workspacePath, "config.json"}, "/"))
+	f, err := os.Create(cfgFilePath)
 	if err != nil {
 		pterm.Error.Printf("%s:[%s]\n", ErrConfigUnableToGenerateConfig, workspacePath)
 		pterm.Println()
@@ -146,7 +159,7 @@ func (cmd *configCommand) runWithError(c *cobra.Command, args []string) error {
 		return errors.New("error")
 	}
 
-	err = os.Mkdir(strings.Join([]string{workspacePath, "repo"}, "/"), os.ModePerm)
+	err = os.Mkdir(repoDirPath, os.ModePerm)
 	if err != nil {
 		pterm.Error.Printf("%s:[%s]\n", ErrConfigUnableToCreateWorkspace, workspacePath)
 
@@ -168,7 +181,9 @@ func (cmd *configCommand) runWithError(c *cobra.Command, args []string) error {
 	}
 
 	err = t.Execute(f, map[string]string{
-		"Name": "test",
+		"Name":     "test",
+		"RepoPath": repoDirPath,
+		"FileExt":  FileExtension,
 	})
 
 	if err != nil {
