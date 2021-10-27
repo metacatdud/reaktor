@@ -1,0 +1,8 @@
+bin/*
+!bin/migrate
+vendor/*
+!vendor/modules.txt
+cmd/auth0-management-service/auth0-management-service
+config.json
+__debug_bin
+coverage.out
